@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自定义网址导航</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+            padding: 40px 15px;
+        }
+        .wrap {
+            max-width: 920px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 14px rgba(0,0,0,0.08);
+        }
+        .head {
+            background: #2b7cd3;
+            color: #fff;
+            padding: 22px 30px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 18px 30px;
+            border-bottom: 1px solid #eee;
+            gap: 20px;
+        }
+        .list-item:hover {
+            background-color: #f7f9fc;
+        }
+        .info {
+            flex: 1;
+        }
+        .name {
+            font-size: 17px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 4px;
+            line-height: 1.5;
+        }
+        .intro {
+            font-size: 14px;
+            color: #666;
+        }
+        .link-box a {
+            padding: 8px 18px;
+            background: #2b7cd3;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .link-box a:hover {
+            background: #2167b1;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="head">我的网址导航</div>
+    <div id="list"></div>
+</div>
+<script>
+// ========== 在这里自定义你的网站，只修改这里！==========
+const siteList = [
+    {
+        name: "ai质检平台",
+        intro: "ai工具",
+        url: "https://ai-video.alpha.turingapi.com/"
+    },
+    {
+        name: "ai修复平台",
+        intro: "ai工具",
+        url: "http://192.168.77.84:12400/chat?id=89"
+    },
+    {
+        name: "题库录题后台",
+        intro: "ai工具",
+        url:"https://qbase-admin.turingapi.com/question-manage?status=2"
+    },
+    {
+        name: "题库录题后台（测试）",
+        intro: "ai工具",
+        url:"https://qbase-admin.alpha.turingapi.com/question-manage?status=2"
+    },
+    {
+        name: "智学管理系统",
+        intro: "ai工具",
+        url:"https://edu-ai-admin.turingapi.com/#/aftersales"
+    },
+    {
+        name: "高三一轮复习制作",
+        intro: "腾讯文档",
+        url: "https://www.kdocs.cn/l/chxiZMklTc8i"
+    },
+    {
+        name: "赶考1.0版AI互动课质检",
+        intro: "腾讯文档",
+        url: "https://docs.qq.com/sheet/DS3RFZW9qd01xbHpX?tab=qkon9x"
+    },
+    {
+        name: "小鹿视频网址（用户名qc1@uzoo.cn 密码Y0mdTb5oKlw1nrHiJMz4）",
+        intro: "ai原视频",
+        url: "https://ai-interact-lesson.alpha.turingapi.com/xiaolu/"
+    },
+    {
+        name: "高一高二 AI互动课制作",
+        intro: "腾讯文档",
+        url: "https://www.kdocs.cn/l/ctnXRN3R5nDc"
+    },
+    {
+        name: "高中视频id",
+        intro: "腾讯文档",
+        url: "https://docs.qq.com/sheet/DUm5vamxkY2pkdGFk?tab=9jvmqo"
+    }
+	
+    // 复制上面{}块，逗号分隔，新增更多网站
+    /*
+    ,{
+        name: "网站名字",
+        intro: "网站介绍",
+        url: "https://xxx.com"
+    }
+    */
+];
+// ======================================================
+// 渲染网站列表
+const dom = document.getElementById('list');
+siteList.forEach(site => {
+    const html = `
+    <div class="list-item">
+        <div class="info">
+            <div class="name">${site.name}</div>
+            <div class="intro">${site.intro}</div>
+        </div>
+        <div class="link-box">
+            <a href="${site.url}" target="_blank">打开</a>
+        </div>
+    </div>
+    `;
+    dom.innerHTML += html;
+})
+</script>
+</body>
+</html>
