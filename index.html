@@ -74,6 +74,7 @@
 <script>
 // ========== 在这里自定义你的网站，只修改这里！==========
 const siteList = [
+    // ===== AI工具 =====
     {
         name: "ai质检平台",
         intro: "ai工具",
@@ -87,18 +88,25 @@ const siteList = [
     {
         name: "题库录题后台",
         intro: "ai工具",
-        url:"https://qbase-admin.turingapi.com/question-manage?status=2"
+        url: "https://qbase-admin.turingapi.com/question-manage?status=2"
     },
     {
         name: "题库录题后台（测试）",
         intro: "ai工具",
-        url:"https://qbase-admin.alpha.turingapi.com/question-manage?status=2"
+        url: "https://qbase-admin.alpha.turingapi.com/question-manage?status=2"
     },
     {
         name: "智学管理系统",
         intro: "ai工具",
-        url:"https://edu-ai-admin.turingapi.com/#/aftersales"
+        url: "https://edu-ai-admin.turingapi.com/#/aftersales"
     },
+    {
+        name: "小鹿视频网址（用户名qc1@uzoo.cn 密码Y0mdTb5oKlw1nrHiJMz4）",
+        intro: "ai原视频",
+        url: "https://ai-interact-lesson.alpha.turingapi.com/xiaolu/"
+    },
+
+    // ===== 腾讯文档 =====
     {
         name: "高三一轮复习制作",
         intro: "腾讯文档",
@@ -110,11 +118,6 @@ const siteList = [
         url: "https://docs.qq.com/sheet/DS3RFZW9qd01xbHpX?tab=qkon9x"
     },
     {
-        name: "小鹿视频网址（用户名qc1@uzoo.cn 密码Y0mdTb5oKlw1nrHiJMz4）",
-        intro: "ai原视频",
-        url: "https://ai-interact-lesson.alpha.turingapi.com/xiaolu/"
-    },
-    {
         name: "高一高二 AI互动课制作",
         intro: "腾讯文档",
         url: "https://www.kdocs.cn/l/ctnXRN3R5nDc"
@@ -123,16 +126,24 @@ const siteList = [
         name: "高中视频id",
         intro: "腾讯文档",
         url: "https://docs.qq.com/sheet/DUm5vamxkY2pkdGFk?tab=9jvmqo"
+    },
+
+    // ===== 本地工具 =====
+    {
+        name: "配题分类题目查询",
+        intro: "本地工具",
+        url: "knowledge_checker.html"
+    },
+    {
+        name: "文本转latex",
+        intro: "本地工具",
+        url: "text_to_latex.html"
+    },
+    {
+        name: "文档题号转【题干】",
+        intro: "本地工具",
+        url: "docx_tagger.html"
     }
-	
-    // 复制上面{}块，逗号分隔，新增更多网站
-    /*
-    ,{
-        name: "网站名字",
-        intro: "网站介绍",
-        url: "https://xxx.com"
-    }
-    */
 ];
 // ======================================================
 // 渲染网站列表
