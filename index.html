@@ -1,156 +1,388 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自定义网址导航</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: system-ui, sans-serif;
-        }
-        body {
-            background-color: #f5f7fa;
-            padding: 40px 15px;
-        }
-        .wrap {
-            max-width: 920px;
-            margin: 0 auto;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 14px rgba(0,0,0,0.08);
-        }
-        .head {
-            background: #2b7cd3;
-            color: #fff;
-            padding: 22px 30px;
-            font-size: 22px;
-            font-weight: bold;
-        }
-        .list-item {
-            display: flex;
-            align-items: center;
-            padding: 18px 30px;
-            border-bottom: 1px solid #eee;
-            gap: 20px;
-        }
-        .list-item:hover {
-            background-color: #f7f9fc;
-        }
-        .info {
-            flex: 1;
-        }
-        .name {
-            font-size: 17px;
-            font-weight: 600;
-            color: #111;
-            margin-bottom: 4px;
-            line-height: 1.5;
-        }
-        .intro {
-            font-size: 14px;
-            color: #666;
-        }
-        .link-box a {
-            padding: 8px 18px;
-            background: #2b7cd3;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        .link-box a:hover {
-            background: #2167b1;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaTeX 工具集 & 网址导航</title>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #333; min-height: 100vh; }
+.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 32px 24px 0; text-align: center; }
+.header h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+.header p { font-size: 14px; opacity: 0.85; padding-bottom: 20px; }
+.tabs { display: flex; justify-content: center; gap: 0; }
+.tab { padding: 14px 32px; font-size: 15px; font-weight: 500; cursor: pointer; border: none; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); transition: all 0.2s; border-radius: 10px 10px 0 0; margin: 0 4px; }
+.tab:hover { background: rgba(255,255,255,0.25); color: white; }
+.tab.active { background: #f0f2f5; color: #333; }
+.container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+.panel { background: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.panel h3 { font-size: 15px; margin-bottom: 12px; color: #555; }
+textarea { width: 100%; min-height: 150px; padding: 12px; border: 1px solid #d9d9d9; border-radius: 8px; font-size: 14px; font-family: 'Consolas', 'Courier New', monospace; resize: vertical; line-height: 1.6; }
+textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgba(102,126,234,0.2); }
+.btn-row { display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap; align-items: center; }
+.btn { padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-secondary { background: #f5f5f5; color: #666; border: 1px solid #d9d9d9; }
+.btn-secondary:hover { background: #eee; }
+.btn-success { background: #52c41a; color: white; }
+.btn-success:hover { background: #45a818; }
+.btn-green { background: linear-gradient(135deg, #11998e, #38ef7d); color: white; }
+.btn-green:hover { opacity: 0.9; transform: translateY(-1px); }
+.output-area { background: #1e1e1e; color: #d4d4d4; border-radius: 8px; padding: 16px; font-family: 'Consolas', 'Courier New', monospace; font-size: 13px; white-space: pre-wrap; word-break: break-all; line-height: 1.8; min-height: 80px; }
+.stats { display: flex; gap: 24px; margin-top: 12px; font-size: 13px; color: #999; }
+.stats span { background: #f5f5f5; padding: 4px 12px; border-radius: 12px; }
+.copy-msg { color: #52c41a; font-size: 13px; margin-left: 8px; }
+.example { background: #f6f8fa; border-radius: 8px; padding: 12px 16px; font-size: 13px; margin-top: 12px; line-height: 1.8; }
+.example .label { font-weight: 600; color: #667eea; }
+.upload-area { background: white; border: 2px dashed #d9d9d9; border-radius: 12px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 24px; }
+.upload-area:hover, .upload-area.dragover { border-color: #11998e; background: #f0fff4; }
+.upload-area svg { width: 48px; height: 48px; margin-bottom: 12px; color: #11998e; }
+.upload-area .main-text { font-size: 16px; color: #333; margin-bottom: 8px; }
+.upload-area .sub-text { font-size: 13px; color: #999; }
+.upload-area input { display: none; }
+.config-section { background: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.config-section h3 { font-size: 15px; margin-bottom: 12px; color: #555; }
+.rule-list { list-style: none; padding: 0; }
+.rule-list li { padding: 6px 0; font-size: 13px; color: #555; display: flex; align-items: flex-start; gap: 8px; }
+.rule-list li::before { content: '✓'; color: #11998e; font-weight: bold; flex-shrink: 0; }
+.actions { display: flex; gap: 12px; margin-bottom: 24px; }
+.multi-files { margin-bottom: 16px; }
+.file-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #11998e; color: white; border-radius: 20px; font-size: 13px; margin: 4px; cursor: pointer; transition: all 0.2s; }
+.file-chip:hover { background: #0e8a7d; }
+.file-chip .remove { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; background: rgba(255,255,255,0.3); }
+.log-box { background: #1e1e1e; color: #d4d4d4; border-radius: 8px; padding: 16px; font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; max-height: 300px; overflow-y: auto; margin-top: 16px; line-height: 1.6; }
+.log-box .log-ok { color: #6a9955; }
+.log-box .log-warn { color: #ce9178; }
+.hidden { display: none; }
+.progress-bar { height: 4px; background: #e0e0e0; border-radius: 2px; margin-bottom: 24px; overflow: hidden; }
+.progress-bar .fill { height: 100%; background: linear-gradient(90deg, #11998e, #38ef7d); border-radius: 2px; transition: width 0.3s; width: 0%; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* 导航列表样式 */
+.nav-wrap { max-width: 920px; margin: 0 auto; }
+.nav-list-item { display: flex; align-items: center; padding: 18px 30px; border-bottom: 1px solid #eee; gap: 20px; background: white; }
+.nav-list-item:hover { background-color: #f7f9fc; }
+.nav-info { flex: 1; }
+.nav-name { font-size: 17px; font-weight: 600; color: #111; margin-bottom: 4px; line-height: 1.5; }
+.nav-intro { font-size: 14px; color: #666; }
+.nav-link-box a, .nav-link-box button { padding: 8px 18px; background: #2b7cd3; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; border: none; cursor: pointer; }
+.nav-link-box a:hover, .nav-link-box button:hover { background: #2167b1; }
+</style>
 </head>
 <body>
-<div class="wrap">
-    <div class="head">我的网址导航</div>
-    <div id="list"></div>
+
+<div class="header">
+  <h1>🛠️ LaTeX 工具集</h1>
+  <p>文本转 LaTeX 格式 &amp; 文档题号转【题干】 &amp; 网址导航</p>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('text2latex')"> 文本转 LaTeX</button>
+    <button class="tab" onclick="switchTab('docxTagger')">📄 题号转【题干】</button>
+    <button class="tab" onclick="switchTab('nav')">🔗 网址导航</button>
+  </div>
 </div>
-<script>
-// ========== 在这里自定义你的网站，只修改这里！==========
-const siteList = [
-    {
-        name: "ai质检平台",
-        intro: "ai工具",
-        url: "https://ai-video.alpha.turingapi.com/"
-    },
-    {
-        name: "ai修复平台",
-        intro: "ai工具",
-        url: "http://192.168.77.84:12400/chat?id=89"
-    },
-    {
-        name: "题库录题后台",
-        intro: "ai工具",
-        url:"https://qbase-admin.turingapi.com/question-manage?status=2"
-    },
-    {
-        name: "题库录题后台（测试）",
-        intro: "ai工具",
-        url:"https://qbase-admin.alpha.turingapi.com/question-manage?status=2"
-    },
-    {
-        name: "智学管理系统",
-        intro: "ai工具",
-        url:"https://edu-ai-admin.turingapi.com/#/aftersales"
-    },
-    {
-        name: "高三一轮复习制作",
-        intro: "腾讯文档",
-        url: "https://www.kdocs.cn/l/chxiZMklTc8i"
-    },
-    {
-        name: "赶考1.0版AI互动课质检",
-        intro: "腾讯文档",
-        url: "https://docs.qq.com/sheet/DS3RFZW9qd01xbHpX?tab=qkon9x"
-    },
-    {
-        name: "小鹿视频网址（用户名qc1@uzoo.cn 密码Y0mdTb5oKlw1nrHiJMz4）",
-        intro: "ai原视频",
-        url: "https://ai-interact-lesson.alpha.turingapi.com/xiaolu/"
-    },
-    {
-        name: "高一高二 AI互动课制作",
-        intro: "腾讯文档",
-        url: "https://www.kdocs.cn/l/ctnXRN3R5nDc"
-    },
-    {
-        name: "高中视频id",
-        intro: "腾讯文档",
-        url: "https://docs.qq.com/sheet/DUm5vamxkY2pkdGFk?tab=9jvmqo"
-    }
-	
-    // 复制上面{}块，逗号分隔，新增更多网站
-    /*
-    ,{
-        name: "网站名字",
-        intro: "网站介绍",
-        url: "https://xxx.com"
-    }
-    */
-];
-// ======================================================
-// 渲染网站列表
-const dom = document.getElementById('list');
-siteList.forEach(site => {
-    const html = `
-    <div class="list-item">
-        <div class="info">
-            <div class="name">${site.name}</div>
-            <div class="intro">${site.intro}</div>
-        </div>
-        <div class="link-box">
-            <a href="${site.url}" target="_blank">打开</a>
-        </div>
+
+<!-- ==================== 文本转 LaTeX ==================== -->
+<div class="container tab-content active" id="tab-text2latex">
+  <div class="panel">
+    <h3>📥 输入文本</h3>
+    <textarea id="inputText" placeholder="在此粘贴文本..."></textarea>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="convert()">🔄 转换</button>
+      <button class="btn btn-secondary" onclick="clearAll()">🗑️ 清空</button>
+      <button class="btn btn-secondary" onclick="pasteFromClipboard()">📋 粘贴</button>
+      <button class="btn btn-secondary" onclick="loadExample()">📄 示例</button>
     </div>
-    `;
-    dom.innerHTML += html;
-})
+    <div class="example">
+      <span class="label">输入：</span>比如H₂S、CH 热解重整制 H₂ 过程中的主要反应为2H₂S = 2H₂ + S₂ → 2H₂S + CH₄ = CS₂ + 4H₂。下列有关说法正确的是<br>
+      <span class="label">输出：</span>比如$H₂S$、$CH$ 热解重整制 $H₂$ 过程中的主要反应为$2H₂S = 2H₂ + S₂ → 2H₂S + CH₄ = CS₂ + 4H₂$。下列有关说法正确的是
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>📤 转换结果</h3>
+    <div class="btn-row" style="margin-top:0">
+      <button class="btn btn-success" onclick="copyResult()"> 复制结果</button>
+      <span class="copy-msg" id="copyMsg"></span>
+    </div>
+    <div class="output-area" id="output"></div>
+    <div class="stats">
+      <span id="statChars">字符: 0</span>
+      <span id="statGroups">$...$ 组: 0</span>
+      <span id="statLines">行数: 0</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 文档题号转【题干】 ==================== -->
+<div class="container tab-content" id="tab-docxTagger">
+  <div class="upload-area" id="uploadArea">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+    <div class="main-text">点击或拖拽上传 Word 文档</div>
+    <div class="sub-text">支持 .docx 格式，可同时上传多个文件</div>
+    <input type="file" id="fileInput" accept=".docx" multiple>
+  </div>
+
+  <div id="fileList" class="multi-files hidden"></div>
+
+  <div class="config-section">
+    <h3> 处理规则</h3>
+    <ul class="rule-list">
+      <li>大题号（如 <code>1．</code> <code>2、</code> <code>3.</code>）替换为【题干】</li>
+      <li>小题号（如 <code>(1)</code> <code>①</code>）不修改</li>
+      <li>分类标题（如 <code>一、选择题</code>）不修改</li>
+      <li>标签内题号（【答案】【难度】【来源】等）不修改</li>
+      <li>材料题无大题号时，在材料前添加【题干】</li>
+      <li><code>%</code> 自动转换为 <code>\%</code>（LaTeX 转义）</li>
+      <li>输出为新文档，原文件不受影响</li>
+    </ul>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-green" id="processBtn" disabled onclick="processFiles()">🚀 开始处理</button>
+    <button class="btn btn-secondary" onclick="resetAll()">🔄 重新选择</button>
+  </div>
+
+  <div class="progress-bar hidden" id="progressBar"><div class="fill" id="progressFill"></div></div>
+  <div id="results" class="hidden"></div>
+</div>
+
+<!-- ==================== 网址导航 ==================== -->
+<div class="container tab-content" id="tab-nav">
+  <div class="nav-wrap" id="navList"></div>
+</div>
+
+<script>
+// ===== 标签页切换 =====
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  const tabs = ['text2latex', 'docxTagger', 'nav'];
+  const idx = tabs.indexOf(tab);
+  if (idx >= 0) {
+    document.querySelectorAll('.tab')[idx].classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+  }
+}
+
+// ===== 网址导航数据 =====
+const siteList = [
+  { name: "ai质检平台", intro: "ai工具", url: "https://ai-video.alpha.turingapi.com/" },
+  { name: "ai修复平台", intro: "ai工具", url: "http://192.168.77.84:12400/chat?id=89" },
+  { name: "题库录题后台", intro: "ai工具", url: "https://qbase-admin.turingapi.com/question-manage?status=2" },
+  { name: "题库录题后台（测试）", intro: "ai工具", url: "https://qbase-admin.alpha.turingapi.com/question-manage?status=2" },
+  { name: "智学管理系统", intro: "ai工具", url: "https://edu-ai-admin.turingapi.com/#/aftersales" },
+  { name: "小鹿视频网址（用户名qc1@uzoo.cn 密码Y0mdTb5oKlw1nrHiJMz4）", intro: "ai原视频", url: "https://ai-interact-lesson.alpha.turingapi.com/xiaolu/" },
+  { name: "高三一轮复习制作", intro: "腾讯文档", url: "https://www.kdocs.cn/l/chxiZMklTc8i" },
+  { name: "赶考1.0版AI互动课质检", intro: "腾讯文档", url: "https://docs.qq.com/sheet/DS3RFZW9qd01xbHpX?tab=qkon9x" },
+  { name: "高一高二 AI互动课制作", intro: "腾讯文档", url: "https://www.kdocs.cn/l/ctnXRN3R5nDc" },
+  { name: "高中视频id", intro: "腾讯文档", url: "https://docs.qq.com/sheet/DUm5vamxkY2pkdGFk?tab=9jvmqo" },
+  { name: "配题分类题目查询", intro: "本地工具", url: "knowledge_checker.html" }
+];
+
+const navDom = document.getElementById('navList');
+siteList.forEach(site => {
+  const html = `<div class="nav-list-item"><div class="nav-info"><div class="nav-name">${site.name}</div><div class="nav-intro">${site.intro}</div></div><div class="nav-link-box"><a href="${site.url}" target="_blank">打开</a></div></div>`;
+  navDom.innerHTML += html;
+});
+
+// ===================================================================
+// 文本转 LaTeX
+// ===================================================================
+function isChinese(ch) {
+  const code = ch.charCodeAt(0);
+  if (code >= 0x4E00 && code <= 0x9FFF) return true;
+  if (code >= 0x3400 && code <= 0x4DBF) return true;
+  if (code >= 0xF900 && code <= 0xFAFF) return true;
+  if (code >= 0xFF01 && code <= 0xFF5E) return true;
+  if (code >= 0x3000 && code <= 0x303F) return true;
+  if (code === 0x2014 || code === 0x2013 || code === 0x2018 || code === 0x2019 || code === 0x201C || code === 0x201D || code === 0x2026) return true;
+  if ('、。！？：；""\'\'（）【】《》—…·'.includes(ch)) return true;
+  return false;
+}
+
+function convert() {
+  let input = document.getElementById('inputText').value.replace(/&nbsp;/g, '');
+  if (!input.trim()) { document.getElementById('output').textContent = ''; updateStats('', 0); return; }
+  let groupCount = 0, outputLines = [];
+  for (const line of input.split('\n')) {
+    const existingMath = []; let protectedLine = line, searchStart = 0, placeholderIdx = 0;
+    while (true) {
+      const s = protectedLine.indexOf('$', searchStart); if (s === -1) break;
+      const e = protectedLine.indexOf('$', s + 1); if (e === -1) break;
+      existingMath.push({ placeholder: `__MPH_${placeholderIdx}__`, content: protectedLine.substring(s, e + 1) });
+      protectedLine = protectedLine.substring(0, s) + `__MPH_${placeholderIdx}__` + protectedLine.substring(e + 1);
+      placeholderIdx++; searchStart = s + 12;
+    }
+    let outLine = '', buf = '', inMath = false;
+    for (let i = 0; i < protectedLine.length; i++) {
+      const ch = protectedLine[i];
+      if (ch === '_' && protectedLine.substring(i, i + 6) === '__MPH_') {
+        const ei = protectedLine.indexOf('__', i + 6);
+        if (ei !== -1) {
+          const ph = protectedLine.substring(i, ei + 2);
+          const obj = existingMath.find(m => m.placeholder === ph);
+          if (obj) { if (inMath) { buf = buf.trim(); if (buf) { outLine += '$' + buf + '$'; groupCount++; } inMath = false; buf = ''; } outLine += obj.content; groupCount++; i = ei + 1; continue; }
+        }
+      }
+      const cc = ch.charCodeAt(0);
+      if ((cc >= 0x2460 && cc <= 0x2473) || (cc >= 0x3251 && cc <= 0x325F) || (cc >= 0x32B1 && cc <= 0x32BF)) {
+        if (inMath) { buf = buf.trim(); if (buf) { outLine += '$' + buf + '$'; groupCount++; } inMath = false; buf = ''; }
+        outLine += ch;
+      } else if (isChinese(ch)) {
+        if (inMath) { buf = buf.trim(); if (buf) { outLine += '$' + buf + '$'; groupCount++; } inMath = false; buf = ''; }
+        outLine += ch;
+      } else {
+        if (ch === ' ' || ch === '\t') { if (inMath) buf += ch; }
+        else if (ch === '.') { if (inMath) buf += ch; else outLine += ch; }
+        else { if (!inMath) { inMath = true; buf = ''; } buf += ch; }
+      }
+    }
+    if (inMath) { buf = buf.trim(); if (buf) { outLine += '$' + buf + '$'; groupCount++; } }
+    outputLines.push(outLine);
+  }
+  let output = outputLines.join('\n\n');
+  output = output.replace(/(\$[^$]+\$)(\$[^$]+\$)/g, '$1 $2');
+  output = output.replace(/(?<!\\)%/g, '\\%');
+  output = output.replace(/(?<!\\)~/g, '\\sim ');
+  document.getElementById('output').textContent = output;
+  updateStats(output, groupCount);
+}
+
+function updateStats(text, groups) {
+  const lines = text.split('\n').filter(l => l.trim()).length;
+  document.getElementById('statChars').textContent = '字符: ' + text.length;
+  document.getElementById('statGroups').textContent = '$...$ 组: ' + groups;
+  document.getElementById('statLines').textContent = '行数: ' + lines;
+}
+
+function copyResult() {
+  const text = document.getElementById('output').textContent;
+  if (!text) { document.getElementById('copyMsg').textContent = '没有内容可复制'; return; }
+  navigator.clipboard.writeText(text).then(() => { document.getElementById('copyMsg').textContent = '✓ 已复制！'; setTimeout(() => document.getElementById('copyMsg').textContent = '', 2000); });
+}
+
+function clearAll() { document.getElementById('inputText').value = ''; document.getElementById('output').textContent = ''; updateStats('', 0); document.getElementById('copyMsg').textContent = ''; }
+async function pasteFromClipboard() { try { document.getElementById('inputText').value = await navigator.clipboard.readText(); } catch(e) { alert('无法访问剪贴板，请手动粘贴'); } }
+function loadExample() { document.getElementById('inputText').value = '比如H₂S、CH₄ 热解重整制 H₂ 过程中的主要反应为2H₂S = 2H₂ + S₂ → 2H₂S + CH₄ = CS₂ + 4H₂。下列有关说法正确的是'; convert(); }
+
+// ===================================================================
+// 文档题号转【题干】
+// ===================================================================
+const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+let loadedFiles = [];
+
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('fileInput');
+uploadArea.addEventListener('click', () => fileInput.click());
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', e => { e.preventDefault(); uploadArea.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(files) { for (const f of files) { if (/\.docx$/i.test(f.name) && !f.name.startsWith('~$')) loadedFiles.push(f); } renderFileList(); document.getElementById('processBtn').disabled = loadedFiles.length === 0; }
+function renderFileList() { const el = document.getElementById('fileList'); if (!loadedFiles.length) { el.classList.add('hidden'); return; } el.classList.remove('hidden'); el.innerHTML = loadedFiles.map((f, i) => '<span class="file-chip" onclick="removeFile(' + i + ')">' + f.name + ' <span class="remove"></span></span>').join(''); }
+function removeFile(idx) { loadedFiles.splice(idx, 1); renderFileList(); document.getElementById('processBtn').disabled = loadedFiles.length === 0; }
+function resetAll() { loadedFiles = []; fileInput.value = ''; renderFileList(); document.getElementById('processBtn').disabled = true; document.getElementById('results').classList.add('hidden'); document.getElementById('results').innerHTML = ''; document.getElementById('progressBar').classList.add('hidden'); }
+
+function getParaText(pElem) { let text = ''; const runs = pElem.getElementsByTagNameNS(W_NS, 'r'); for (const r of runs) { const ts = r.getElementsByTagNameNS(W_NS, 't'); for (const t of ts) text += t.textContent || ''; } return text; }
+function replacePrefixInPara(pElem, prefixLen) {
+  const runs = pElem.getElementsByTagNameNS(W_NS, 'r'); let charsSkipped = 0, tagAdded = false;
+  for (const r of runs) { const ts = r.getElementsByTagNameNS(W_NS, 't'); for (const t of ts) {
+    const txt = t.textContent || ''; if (!txt.length) continue;
+    if (charsSkipped < prefixLen) { const skip = Math.min(prefixLen - charsSkipped, txt.length); t.textContent = tagAdded ? txt.substring(skip) : '【题干】' + txt.substring(skip); tagAdded = true; charsSkipped += skip; if (charsSkipped >= prefixLen) return true; }
+  }} return false;
+}
+
+function processDocxXml(xmlStr) {
+  const doc = new DOMParser().parseFromString(xmlStr, 'application/xml');
+  const body = doc.getElementsByTagNameNS(W_NS, 'body')[0];
+  const pArr = Array.from(body.getElementsByTagNameNS(W_NS, 'p'));
+  const n = pArr.length, tagged = new Set(); let replaced = 0; const logs = [];
+  const texts = pArr.map(p => getParaText(p).trim());
+  const isQNum = t => /^\d+[．.、]/.test(t);
+  const getPrefix = t => { const m = t.match(/^(\d+[．.、])/); return m ? m[1] : null; };
+  const isOpt = t => /^[A-Da-d][．.、\s]/.test(t);
+
+  for (let i = 0; i < n; i++) {
+    const t = texts[i]; if (!/【答案】|【难度】|【来源】|【知识点】/.test(t)) continue;
+    for (let j = i - 1; j >= 0; j--) {
+      const tj = texts[j]; if (!tj) continue;
+      if (tj.startsWith('【题干】')) { tagged.add(j); break; }
+      if (isQNum(tj)) { const prefix = getPrefix(tj); if (prefix && replacePrefixInPara(pArr[j], prefix.length)) { tagged.add(j); replaced++; logs.push({ type: 'ok', msg: '段落' + j + ': "' + tj.substring(0, 30) + '..." → 【题干】' }); } break; }
+      if (/^[一二三四五六七八九十]+、/.test(tj)) break;
+      if (isOpt(tj)) continue;
+      if (/^【(分析|点睛|导语|原文)】/.test(tj)) continue;
+      break;
+    }
+  }
+  for (let i = 0; i < n; i++) {
+    const t = texts[i]; if (!isQNum(t) || tagged.has(i)) continue;
+    for (let j = i + 1; j < Math.min(i + 10, n); j++) {
+      const tj = texts[j];
+      if (/【答案】|【难度】|【详解】|【解析】/.test(tj)) { const prefix = getPrefix(t); if (prefix && replacePrefixInPara(pArr[i], prefix.length)) { tagged.add(i); replaced++; logs.push({ type: 'ok', msg: '段落' + i + ': "' + t.substring(0, 30) + '..." → 【题干】' }); } break; }
+      if (isQNum(tj)) break;
+    }
+  }
+
+  const outXml = new XMLSerializer().serializeToString(doc);
+  const finalXml = outXml.replace(/(?<!\\)%/g, '\\%');
+  return { xml: finalXml, replaced, qtagCount: (finalXml.match(/【题干】/g) || []).length, logs };
+}
+
+async function processDocxFile(file) {
+  const zip = await JSZip.loadAsync(file);
+  const docXmlFile = zip.file('word/document.xml');
+  if (!docXmlFile) throw new Error('无法找到 word/document.xml');
+  const xmlStr = await docXmlFile.async('string');
+  const result = processDocxXml(xmlStr);
+  zip.file('word/document.xml', result.xml);
+  const blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  return { blob, ...result };
+}
+
+async function processFiles() {
+  const btn = document.getElementById('processBtn'); btn.disabled = true; btn.textContent = '⏳ 处理中...';
+  const bar = document.getElementById('progressBar'); bar.classList.remove('hidden');
+  const el = document.getElementById('results'); el.classList.remove('hidden'); el.innerHTML = '';
+  const allResults = [];
+  for (let i = 0; i < loadedFiles.length; i++) {
+    document.getElementById('progressFill').style.width = ((i / loadedFiles.length) * 100) + '%';
+    try {
+      const result = await processDocxFile(loadedFiles[i]);
+      allResults.push({ name: loadedFiles[i].name, ...result, error: null });
+      saveAs(result.blob, loadedFiles[i].name.replace('.docx', '_修改后.docx'));
+    } catch (err) { allResults.push({ name: loadedFiles[i].name, error: err.message }); }
+  }
+  document.getElementById('progressFill').style.width = '100%';
+  renderResults(allResults);
+  btn.disabled = false; btn.textContent = '🚀 开始处理';
+}
+
+function renderResults(results) {
+  const el = document.getElementById('results'); let html = '';
+  results.forEach((r, ri) => {
+    const outName = r.name.replace('.docx', '_修改后.docx');
+    html += '<div style="padding:12px 16px;background:' + (r.error ? '#fff1f0' : '#f6ffed') + ';border-radius:8px;margin-bottom:12px;font-size:13px">';
+    html += (r.error ? '❌' : '✅') + ' ' + r.name;
+    if (!r.error) html += ' — 替换 ' + r.replaced + ' 处 | 【题干】=' + r.qtagCount + ' | <a href="#" onclick="redownload(' + ri + ');return false;" style="color:#11998e;margin-left:8px">⬇ 重新下载</a>';
+    else html += ' — 错误: ' + r.error;
+    html += '</div>';
+    if (r.logs && r.logs.length) {
+      html += '<div class="log-box">';
+      r.logs.forEach(l => { html += '<div class="' + (l.type === 'ok' ? 'log-ok' : 'log-warn') + '">' + l.msg + '</div>'; });
+      html += '</div>';
+    }
+  });
+  el.innerHTML = html;
+  window._resultBlobs = results.map(r => r.blob ? { blob: r.blob, name: r.name.replace('.docx', '_修改后.docx') } : null);
+}
+
+function redownload(idx) { const item = window._resultBlobs[idx]; if (item) saveAs(item.blob, item.name); }
 </script>
 </body>
 </html>
