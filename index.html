@@ -3,9 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LaTeX 工具集 & 网址导航</title>
+<title>LaTeX 工具集</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+if (typeof JSZip === 'undefined') {
+  document.write('<script src="https://cdn.bootcdn.net/ajax/libs/jszip/3.10.1/jszip.min.js"><\/script>');
+}
+if (typeof saveAs === 'undefined') {
+  document.write('<script src="https://cdn.bootcdn.net/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"><\/script>');
+}
+if (typeof XLSX === 'undefined') {
+  document.write('<script src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>');
+}
+</script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #333; min-height: 100vh; }
@@ -54,24 +67,93 @@ textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgb
 .file-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #11998e; color: white; border-radius: 20px; font-size: 13px; margin: 4px; cursor: pointer; transition: all 0.2s; }
 .file-chip:hover { background: #0e8a7d; }
 .file-chip .remove { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; background: rgba(255,255,255,0.3); }
+.summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.summary-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center; }
+.summary-card .num { font-size: 32px; font-weight: 700; margin-bottom: 4px; }
+.summary-card .label { font-size: 13px; color: #999; }
+.summary-card.ok .num { color: #52c41a; }
+.summary-card.fail .num { color: #ff4d4f; }
+.summary-card.total .num { color: #11998e; }
+.result-section { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 24px; }
+.result-header { padding: 16px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+.result-header h3 { font-size: 16px; }
+.file-info { background: white; border-radius: 12px; padding: 16px 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 16px; }
+.file-info .icon { width: 40px; height: 40px; background: #f0fff4; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.file-info .details { flex: 1; }
+.file-info .details .name { font-size: 14px; font-weight: 500; }
+.file-info .details .meta { font-size: 12px; color: #999; margin-top: 2px; }
 .log-box { background: #1e1e1e; color: #d4d4d4; border-radius: 8px; padding: 16px; font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; max-height: 300px; overflow-y: auto; margin-top: 16px; line-height: 1.6; }
 .log-box .log-ok { color: #6a9955; }
 .log-box .log-warn { color: #ce9178; }
+.log-box .log-err { color: #f44747; }
 .hidden { display: none; }
 .progress-bar { height: 4px; background: #e0e0e0; border-radius: 2px; margin-bottom: 24px; overflow: hidden; }
 .progress-bar .fill { height: 100%; background: linear-gradient(90deg, #11998e, #38ef7d); border-radius: 2px; transition: width 0.3s; width: 0%; }
+.download-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 20px; background: #11998e; color: white; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+.download-btn:hover { background: #0e8a7d; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
 /* 导航列表样式 */
 .nav-wrap { max-width: 920px; margin: 0 auto; }
-.nav-list-item { display: flex; align-items: center; padding: 18px 30px; border-bottom: 1px solid #eee; gap: 20px; background: white; }
+.nav-list-item { display: flex; align-items: center; padding: 18px 30px; border-bottom: 1px solid #eee; gap: 20px; background: white; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
 .nav-list-item:hover { background-color: #f7f9fc; }
 .nav-info { flex: 1; }
 .nav-name { font-size: 17px; font-weight: 600; color: #111; margin-bottom: 4px; line-height: 1.5; }
 .nav-intro { font-size: 14px; color: #666; }
-.nav-link-box a, .nav-link-box button { padding: 8px 18px; background: #2b7cd3; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; border: none; cursor: pointer; }
-.nav-link-box a:hover, .nav-link-box button:hover { background: #2167b1; }
+.nav-link-box a { padding: 8px 18px; background: #2b7cd3; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
+.nav-link-box a:hover { background: #2167b1; }
+
+/* 配题查询样式 */
+.kc-upload-area { background: white; border: 2px dashed #d9d9d9; border-radius: 12px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 24px; }
+.kc-upload-area:hover, .kc-upload-area.dragover { border-color: #667eea; background: #f8f7ff; }
+.kc-upload-area svg { width: 48px; height: 48px; margin-bottom: 12px; color: #667eea; }
+.kc-upload-area .main-text { font-size: 16px; color: #333; margin-bottom: 8px; }
+.kc-upload-area .sub-text { font-size: 13px; color: #999; }
+.kc-upload-area input { display: none; }
+.kc-config { background: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.kc-config h3 { font-size: 15px; margin-bottom: 12px; color: #555; }
+.kc-config-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.kc-config-row label { font-size: 13px; color: #666; min-width: 80px; }
+.kc-config-row input[type="date"], .kc-config-row select { padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; }
+.kc-config-row input[type="date"] { min-width: 160px; }
+.kc-cat-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.kc-cat-tag { padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 500; }
+.kc-cat-tag.practice { background: #e6f7ff; color: #1890ff; }
+.kc-cat-tag.quiz { background: #fff0f0; color: #f5222d; }
+.kc-cat-tag.homework { background: #fff7e6; color: #fa8c16; }
+.kc-summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.kc-summary-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); text-align: center; }
+.kc-summary-card .num { font-size: 32px; font-weight: 700; margin-bottom: 4px; }
+.kc-summary-card .label { font-size: 13px; color: #999; }
+.kc-summary-card.ok .num { color: #52c41a; }
+.kc-summary-card.fail .num { color: #ff4d4f; }
+.kc-summary-card.total .num { color: #667eea; }
+.kc-result-section { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 24px; }
+.kc-tab-bar { display: flex; gap: 0; border-bottom: 1px solid #f0f0f0; }
+.kc-tab-bar button { padding: 12px 24px; border: none; background: none; font-size: 14px; color: #666; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.kc-tab-bar button.active { color: #667eea; border-bottom-color: #667eea; font-weight: 500; }
+.kc-tab-bar button .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; margin-left: 6px; }
+.kc-tab-bar button .badge.red { background: #fff1f0; color: #ff4d4f; }
+.kc-tab-bar button .badge.green { background: #f6ffed; color: #52c41a; }
+.kc-table { width: 100%; border-collapse: collapse; }
+.kc-table th { background: #fafafa; padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #555; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+.kc-table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f5f5f5; }
+.kc-table tr:hover td { background: #fafafa; }
+.kc-status-ok { color: #52c41a; font-weight: 600; }
+.kc-status-fail { color: #ff4d4f; font-weight: 600; }
+.kc-cell-ok { background: #f6ffed; }
+.kc-cell-fail { background: #fff1f0; }
+.kc-file-info { background: white; border-radius: 12px; padding: 16px 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 16px; }
+.kc-file-info .icon { width: 40px; height: 40px; background: #f6ffed; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.kc-file-info .details { flex: 1; }
+.kc-file-info .details .name { font-size: 14px; font-weight: 500; }
+.kc-file-info .details .meta { font-size: 12px; color: #999; margin-top: 2px; }
+.kc-empty { text-align: center; padding: 60px 24px; color: #999; }
+.kc-file-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #f5f5f5; border-radius: 20px; font-size: 13px; margin: 4px; cursor: pointer; }
+.kc-file-chip.active { background: #667eea; color: white; }
+.kc-file-chip .remove { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; background: rgba(0,0,0,0.15); }
+.kc-tab-panel { overflow-x: auto; }
 </style>
 </head>
 <body>
@@ -83,30 +165,31 @@ textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgb
     <button class="tab active" onclick="switchTab('text2latex')"> 文本转 LaTeX</button>
     <button class="tab" onclick="switchTab('docxTagger')">📄 题号转【题干】</button>
     <button class="tab" onclick="switchTab('nav')">🔗 网址导航</button>
+    <button class="tab" onclick="switchTab('checker')">🔍 配题查询</button>
   </div>
 </div>
 
 <!-- ==================== 文本转 LaTeX ==================== -->
 <div class="container tab-content active" id="tab-text2latex">
   <div class="panel">
-    <h3>📥 输入文本</h3>
+    <h3> 输入文本</h3>
     <textarea id="inputText" placeholder="在此粘贴文本..."></textarea>
     <div class="btn-row">
       <button class="btn btn-primary" onclick="convert()">🔄 转换</button>
-      <button class="btn btn-secondary" onclick="clearAll()">🗑️ 清空</button>
+      <button class="btn btn-secondary" onclick="clearAll()">️ 清空</button>
       <button class="btn btn-secondary" onclick="pasteFromClipboard()">📋 粘贴</button>
-      <button class="btn btn-secondary" onclick="loadExample()">📄 示例</button>
+      <button class="btn btn-secondary" onclick="loadExample()"> 示例</button>
     </div>
     <div class="example">
-      <span class="label">输入：</span>比如H₂S、CH 热解重整制 H₂ 过程中的主要反应为2H₂S = 2H₂ + S₂ → 2H₂S + CH₄ = CS₂ + 4H₂。下列有关说法正确的是<br>
-      <span class="label">输出：</span>比如$H₂S$、$CH$ 热解重整制 $H₂$ 过程中的主要反应为$2H₂S = 2H₂ + S₂ → 2H₂S + CH₄ = CS₂ + 4H₂$。下列有关说法正确的是
+      <span class="label">输入：</span>比如H₂S、CH₄ 热解重整制 H₂ 过程中的主要反应为2H₂S = 2H₂ + S₂ → 2H₂S + CH₄ = CS₂ + 4H₂。下列有关说法正确的是<br>
+      <span class="label">输出：</span>比如$H₂S$、$CH₄$ 热解重整制 $H₂$ 过程中的主要反应为$2H₂S = 2H₂ + S₂ → 2H₂S + CH₄ = CS₂ + 4H₂$。下列有关说法正确的是
     </div>
   </div>
 
   <div class="panel">
     <h3>📤 转换结果</h3>
     <div class="btn-row" style="margin-top:0">
-      <button class="btn btn-success" onclick="copyResult()"> 复制结果</button>
+      <button class="btn btn-success" onclick="copyResult()">📋 复制结果</button>
       <span class="copy-msg" id="copyMsg"></span>
     </div>
     <div class="output-area" id="output"></div>
@@ -130,7 +213,7 @@ textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgb
   <div id="fileList" class="multi-files hidden"></div>
 
   <div class="config-section">
-    <h3> 处理规则</h3>
+    <h3>📋 处理规则</h3>
     <ul class="rule-list">
       <li>大题号（如 <code>1．</code> <code>2、</code> <code>3.</code>）替换为【题干】</li>
       <li>小题号（如 <code>(1)</code> <code>①</code>）不修改</li>
@@ -139,6 +222,12 @@ textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgb
       <li>材料题无大题号时，在材料前添加【题干】</li>
       <li>输出为新文档，原文件不受影响</li>
     </ul>
+    <div style="margin-top:12px">
+      <label style="font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="skipTableCheck" checked>
+        表格中不添加【题干】
+      </label>
+    </div>
   </div>
 
   <div class="actions">
@@ -152,7 +241,67 @@ textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgb
 
 <!-- ==================== 网址导航 ==================== -->
 <div class="container tab-content" id="tab-nav">
-  <div class="nav-wrap" id="navList"></div>
+  <div style="display:flex;gap:20px;align-items:flex-start">
+    <div class="nav-wrap" id="navList" style="flex:1"></div>
+    <div style="width:280px;flex-shrink:0">
+      <div class="panel" style="position:sticky;top:20px">
+        <h3>🔍 配题分类题目查询</h3>
+        <p style="font-size:13px;color:#666;margin:8px 0 16px">本地工具，查询题目分类</p>
+        <a href="knowledge_checker.html" target="_blank" class="btn btn-primary" style="display:block;text-align:center;text-decoration:none">打开</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 配题查询 ==================== -->
+<div class="container tab-content" id="tab-checker">
+  <div class="kc-upload-area" id="kcUploadArea">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+    <div class="main-text">点击或拖拽上传 Excel 文件</div>
+    <div class="sub-text">支持 .xlsx / .xls，可同时上传多个文件</div>
+    <input type="file" id="kcFileInput" accept=".xlsx,.xls" multiple>
+  </div>
+
+  <div id="kcFileList" class="multi-files hidden"></div>
+
+  <div class="kc-config">
+    <h3>⚙️ 配置</h3>
+    <div class="kc-config-row">
+      <label>筛选模式：</label>
+      <select id="kcDateMode" onchange="kcToggleDateInputs()">
+        <option value="today">今天</option>
+        <option value="range" selected>时间段</option>
+        <option value="single">单个日期</option>
+        <option value="all">不筛选（全部数据）</option>
+      </select>
+    </div>
+    <div class="kc-config-row" id="kcRangeRow">
+      <label>时间范围：</label>
+      <input type="date" id="kcStartDate"> <span style="color:#999">~</span> <input type="date" id="kcEndDate">
+    </div>
+    <div class="kc-config-row hidden" id="kcSingleRow">
+      <label>选择日期：</label>
+      <input type="date" id="kcFilterDate">
+    </div>
+    <div class="kc-config-row">
+      <label>6个分类：</label>
+      <div class="kc-cat-tags">
+        <span class="kc-cat-tag practice">巩固练习 (ct=1, vct=1, ht=1)</span>
+        <span class="kc-cat-tag quiz">当堂小测 (ct=0, vct=2)</span>
+        <span class="kc-cat-tag homework">作业A (ct=2, vct=3, ht=1)</span>
+        <span class="kc-cat-tag homework">作业B (ct=2, vct=3, ht=2)</span>
+        <span class="kc-cat-tag homework">作业C (ct=2, vct=3, ht=3)</span>
+        <span class="kc-cat-tag homework">作业D (ct=2, vct=3, ht=4)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="kcAnalyzeBtn" disabled onclick="kcAnalyze()">🔍 开始分析</button>
+    <button class="btn btn-secondary" onclick="kcReset()">🔄 重新选择</button>
+  </div>
+
+  <div id="kcResults" class="hidden"></div>
 </div>
 
 <script>
@@ -160,7 +309,7 @@ textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 2px rgb
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  const tabs = ['text2latex', 'docxTagger', 'nav'];
+  const tabs = ['text2latex', 'docxTagger', 'nav', 'checker'];
   const idx = tabs.indexOf(tab);
   if (idx >= 0) {
     document.querySelectorAll('.tab')[idx].classList.add('active');
@@ -179,8 +328,7 @@ const siteList = [
   { name: "高三一轮复习制作", intro: "腾讯文档", url: "https://www.kdocs.cn/l/chxiZMklTc8i" },
   { name: "赶考1.0版AI互动课质检", intro: "腾讯文档", url: "https://docs.qq.com/sheet/DS3RFZW9qd01xbHpX?tab=qkon9x" },
   { name: "高一高二 AI互动课制作", intro: "腾讯文档", url: "https://www.kdocs.cn/l/ctnXRN3R5nDc" },
-  { name: "高中视频id", intro: "腾讯文档", url: "https://docs.qq.com/sheet/DUm5vamxkY2pkdGFk?tab=9jvmqo" },
-  { name: "配题分类题目查询", intro: "本地工具", url: "knowledge_checker.html" }
+  { name: "高中视频id", intro: "腾讯文档", url: "https://docs.qq.com/sheet/DUm5vamxkY2pkdGFk?tab=9jvmqo" }
 ];
 
 const navDom = document.getElementById('navList');
@@ -190,7 +338,7 @@ siteList.forEach(site => {
 });
 
 // ===================================================================
-// 文本转 LaTeX
+//  文本转 LaTeX
 // ===================================================================
 function isChinese(ch) {
   const code = ch.charCodeAt(0);
@@ -199,57 +347,113 @@ function isChinese(ch) {
   if (code >= 0xF900 && code <= 0xFAFF) return true;
   if (code >= 0xFF01 && code <= 0xFF5E) return true;
   if (code >= 0x3000 && code <= 0x303F) return true;
-  if (code === 0x2014 || code === 0x2013 || code === 0x2018 || code === 0x2019 || code === 0x201C || code === 0x201D || code === 0x2026) return true;
+  if (code === 0x2014 || code === 0x2013 || code === 0x2018 || code === 0x2019 ||
+      code === 0x201C || code === 0x201D || code === 0x2026) return true;
   if ('、。！？：；""\'\'（）【】《》—…·'.includes(ch)) return true;
   return false;
 }
 
 function convert() {
-  let input = document.getElementById('inputText').value.replace(/&nbsp;/g, '');
-  if (!input.trim()) { document.getElementById('output').textContent = ''; updateStats('', 0); return; }
-  let groupCount = 0, outputLines = [];
-  for (const line of input.split('\n')) {
-    const existingMath = []; let protectedLine = line, searchStart = 0, placeholderIdx = 0;
+  let input = document.getElementById('inputText').value;
+  input = input.replace(/&nbsp;/g, '');
+  if (!input.trim()) {
+    document.getElementById('output').textContent = '';
+    updateStats('', 0);
+    return;
+  }
+
+  let groupCount = 0;
+  const outputLines = [];
+  const lines = input.split('\n');
+
+  for (const line of lines) {
+    const existingMath = [];
+    let protectedLine = line;
+    let searchStart = 0;
+    let placeholderIdx = 0;
+
     while (true) {
-      const s = protectedLine.indexOf('$', searchStart); if (s === -1) break;
-      const e = protectedLine.indexOf('$', s + 1); if (e === -1) break;
-      existingMath.push({ placeholder: `__MPH_${placeholderIdx}__`, content: protectedLine.substring(s, e + 1) });
-      protectedLine = protectedLine.substring(0, s) + `__MPH_${placeholderIdx}__` + protectedLine.substring(e + 1);
-      placeholderIdx++; searchStart = s + 12;
+      const startIdx = protectedLine.indexOf('$', searchStart);
+      if (startIdx === -1) break;
+      const endIdx = protectedLine.indexOf('$', startIdx + 1);
+      if (endIdx === -1) break;
+      const mathContent = protectedLine.substring(startIdx, endIdx + 1);
+      const placeholder = `__MATH_PH_${placeholderIdx}__`;
+      existingMath.push({ placeholder, content: mathContent });
+      protectedLine = protectedLine.substring(0, startIdx) + placeholder + protectedLine.substring(endIdx + 1);
+      placeholderIdx++;
+      searchStart = startIdx + placeholder.length;
     }
-    let outLine = '', buf = '', inMath = false;
+
+    let outLine = '';
+    let buf = '';
+    let inMath = false;
+
     for (let i = 0; i < protectedLine.length; i++) {
       const ch = protectedLine[i];
-      if (ch === '_' && protectedLine.substring(i, i + 6) === '__MPH_') {
-        const ei = protectedLine.indexOf('__', i + 6);
-        if (ei !== -1) {
-          const ph = protectedLine.substring(i, ei + 2);
-          const obj = existingMath.find(m => m.placeholder === ph);
-          if (obj) { if (inMath) { buf = buf.trim(); if (buf) { outLine += '$' + buf + '$'; groupCount++; } inMath = false; buf = ''; } outLine += obj.content; groupCount++; i = ei + 1; continue; }
+
+      if (ch === '_' && protectedLine.substring(i, i + 10) === '__MATH_PH_') {
+        const endIdx = protectedLine.indexOf('__', i + 10);
+        if (endIdx !== -1) {
+          const placeholder = protectedLine.substring(i, endIdx + 2);
+          const mathObj = existingMath.find(m => m.placeholder === placeholder);
+          if (mathObj) {
+            if (inMath) { buf = buf.trim(); if (buf) { outLine += '$' + buf + '$'; groupCount++; } inMath = false; buf = ''; }
+            outLine += mathObj.content;
+            groupCount++;
+            i = endIdx + 1;
+            continue;
+          }
         }
       }
-      const cc = ch.charCodeAt(0);
-      if ((cc >= 0x2460 && cc <= 0x2473) || (cc >= 0x3251 && cc <= 0x325F) || (cc >= 0x32B1 && cc <= 0x32BF)) {
+
+      if (i + 1 < protectedLine.length) {
+        const code = protectedLine.codePointAt(i);
+        if (code >= 0x20000 && code <= 0x2A6DF) {
+          if (inMath) { outLine += '$' + buf + '$'; inMath = false; buf = ''; groupCount++; }
+          outLine += ch;
+          continue;
+        }
+      }
+
+      const circledCode = ch.charCodeAt(0);
+      if ((circledCode >= 0x2460 && circledCode <= 0x2473) ||
+          (circledCode >= 0x3251 && circledCode <= 0x325F) ||
+          (circledCode >= 0x32B1 && circledCode <= 0x32BF)) {
         if (inMath) { buf = buf.trim(); if (buf) { outLine += '$' + buf + '$'; groupCount++; } inMath = false; buf = ''; }
         outLine += ch;
       } else if (isChinese(ch)) {
         if (inMath) { buf = buf.trim(); if (buf) { outLine += '$' + buf + '$'; groupCount++; } inMath = false; buf = ''; }
         outLine += ch;
       } else {
-        if (ch === ' ' || ch === '\t') { if (inMath) buf += ch; }
-        else if (ch === '.') { if (inMath) buf += ch; else outLine += ch; }
-        else { if (!inMath) { inMath = true; buf = ''; } buf += ch; }
+        if (ch === ' ' || ch === '\t') {
+          if (inMath) buf += ch;
+        } else if (ch === '.') {
+          if (inMath) buf += ch; else outLine += ch;
+        } else {
+          if (!inMath) { inMath = true; buf = ''; }
+          buf += ch;
+        }
       }
     }
+
     if (inMath) { buf = buf.trim(); if (buf) { outLine += '$' + buf + '$'; groupCount++; } }
     outputLines.push(outLine);
   }
-  let output = outputLines.join('\n\n');
-  output = output.replace(/(\$[^$]+\$)(\$[^$]+\$)/g, '$1 $2');
-  output = output.replace(/(?<!\\)%/g, '\\%');
-  output = output.replace(/(?<!\\)~/g, '\\sim ');
-  document.getElementById('output').textContent = output;
-  updateStats(output, groupCount);
+
+  const output = outputLines.join('\n\n');
+  // Add space between adjacent $...$ groups
+  let finalOutput = output.replace(/\$\$ /g, '$ $ ').replace(/\$([^$])\$/g, function(match, p1) {
+    return match;
+  });
+  // Simple approach: add space between consecutive $...$ pairs
+  finalOutput = finalOutput.replace(/(\$[^$]+\$)(\$[^$]+\$)/g, '$1 $2');
+  // Convert % to \% for LaTeX (but not already escaped \%)
+  finalOutput = finalOutput.replace(/(?<!\\)%/g, '\\%');
+  // Convert ~ to \sim for LaTeX
+  finalOutput = finalOutput.replace(/(?<!\\)~/g, '\\sim ');
+  document.getElementById('output').textContent = finalOutput;
+  updateStats(finalOutput, groupCount);
 }
 
 function updateStats(text, groups) {
@@ -262,15 +466,33 @@ function updateStats(text, groups) {
 function copyResult() {
   const text = document.getElementById('output').textContent;
   if (!text) { document.getElementById('copyMsg').textContent = '没有内容可复制'; return; }
-  navigator.clipboard.writeText(text).then(() => { document.getElementById('copyMsg').textContent = '✓ 已复制！'; setTimeout(() => document.getElementById('copyMsg').textContent = '', 2000); });
+  navigator.clipboard.writeText(text).then(() => {
+    document.getElementById('copyMsg').textContent = '✓ 已复制！';
+    setTimeout(() => document.getElementById('copyMsg').textContent = '', 2000);
+  }).catch(() => { document.getElementById('copyMsg').textContent = '复制失败，请手动复制'; });
 }
 
-function clearAll() { document.getElementById('inputText').value = ''; document.getElementById('output').textContent = ''; updateStats('', 0); document.getElementById('copyMsg').textContent = ''; }
-async function pasteFromClipboard() { try { document.getElementById('inputText').value = await navigator.clipboard.readText(); } catch(e) { alert('无法访问剪贴板，请手动粘贴'); } }
-function loadExample() { document.getElementById('inputText').value = '比如H₂S、CH₄ 热解重整制 H₂ 过程中的主要反应为2H₂S = 2H₂ + S₂ → 2H₂S + CH₄ = CS₂ + 4H₂。下列有关说法正确的是'; convert(); }
+function clearAll() {
+  document.getElementById('inputText').value = '';
+  document.getElementById('output').textContent = '';
+  updateStats('', 0);
+  document.getElementById('copyMsg').textContent = '';
+}
+
+async function pasteFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    document.getElementById('inputText').value = text;
+  } catch (e) { alert('无法访问剪贴板，请手动粘贴'); }
+}
+
+function loadExample() {
+  document.getElementById('inputText').value = '比如H₂S、CH₄ 热解重整制 H₂ 过程中的主要反应为2H₂S = 2H₂ + S₂ → 2H₂S + CH₄ = CS₂ + 4H₂。下列有关说法正确的是';
+  convert();
+}
 
 // ===================================================================
-// 文档题号转【题干】
+//  文档题号转【题干】
 // ===================================================================
 const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 let loadedFiles = [];
@@ -283,53 +505,220 @@ uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag
 uploadArea.addEventListener('drop', e => { e.preventDefault(); uploadArea.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
 fileInput.addEventListener('change', e => handleFiles(e.target.files));
 
-function handleFiles(files) { for (const f of files) { if (/\.docx$/i.test(f.name) && !f.name.startsWith('~$')) loadedFiles.push(f); } renderFileList(); document.getElementById('processBtn').disabled = loadedFiles.length === 0; }
-function renderFileList() { const el = document.getElementById('fileList'); if (!loadedFiles.length) { el.classList.add('hidden'); return; } el.classList.remove('hidden'); el.innerHTML = loadedFiles.map((f, i) => '<span class="file-chip" onclick="removeFile(' + i + ')">' + f.name + ' <span class="remove"></span></span>').join(''); }
-function removeFile(idx) { loadedFiles.splice(idx, 1); renderFileList(); document.getElementById('processBtn').disabled = loadedFiles.length === 0; }
-function resetAll() { loadedFiles = []; fileInput.value = ''; renderFileList(); document.getElementById('processBtn').disabled = true; document.getElementById('results').classList.add('hidden'); document.getElementById('results').innerHTML = ''; document.getElementById('progressBar').classList.add('hidden'); }
+function handleFiles(files) {
+  for (const f of files) { if (/\.docx$/i.test(f.name) && !f.name.startsWith('~$')) loadedFiles.push(f); }
+  renderFileList();
+  document.getElementById('processBtn').disabled = loadedFiles.length === 0;
+}
 
-function getParaText(pElem) { let text = ''; const runs = pElem.getElementsByTagNameNS(W_NS, 'r'); for (const r of runs) { const ts = r.getElementsByTagNameNS(W_NS, 't'); for (const t of ts) text += t.textContent || ''; } return text; }
+function renderFileList() {
+  const el = document.getElementById('fileList');
+  if (!loadedFiles.length) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  el.innerHTML = loadedFiles.map((f, i) =>
+    '<span class="file-chip" onclick="removeFile(' + i + ')">' + f.name + ' <span class="remove">✕</span></span>'
+  ).join('');
+}
+
+function removeFile(idx) {
+  loadedFiles.splice(idx, 1);
+  renderFileList();
+  document.getElementById('processBtn').disabled = loadedFiles.length === 0;
+}
+
+function resetAll() {
+  loadedFiles = []; fileInput.value = ''; renderFileList();
+  document.getElementById('processBtn').disabled = true;
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('progressBar').classList.add('hidden');
+}
+
+function getParaText(pElem) {
+  let text = '';
+  const runs = pElem.getElementsByTagNameNS(W_NS, 'r');
+  for (const r of runs) {
+    const ts = r.getElementsByTagNameNS(W_NS, 't');
+    for (const t of ts) text += t.textContent || '';
+  }
+  return text;
+}
+
 function replacePrefixInPara(pElem, prefixLen) {
-  const runs = pElem.getElementsByTagNameNS(W_NS, 'r'); let charsSkipped = 0, tagAdded = false;
-  for (const r of runs) { const ts = r.getElementsByTagNameNS(W_NS, 't'); for (const t of ts) {
-    const txt = t.textContent || ''; if (!txt.length) continue;
-    if (charsSkipped < prefixLen) { const skip = Math.min(prefixLen - charsSkipped, txt.length); t.textContent = tagAdded ? txt.substring(skip) : '【题干】' + txt.substring(skip); tagAdded = true; charsSkipped += skip; if (charsSkipped >= prefixLen) return true; }
-  }} return false;
+  const runs = pElem.getElementsByTagNameNS(W_NS, 'r');
+  let charsSkipped = 0, tagAdded = false;
+  for (const r of runs) {
+    const ts = r.getElementsByTagNameNS(W_NS, 't');
+    for (const t of ts) {
+      const txt = t.textContent || '';
+      const runLen = txt.length;
+      if (runLen === 0) continue;
+      if (charsSkipped < prefixLen) {
+        const skip = Math.min(prefixLen - charsSkipped, runLen);
+        if (!tagAdded) { t.textContent = '【题干】' + txt.substring(skip); tagAdded = true; }
+        else { t.textContent = txt.substring(skip); }
+        charsSkipped += skip;
+        if (charsSkipped >= prefixLen) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function addTagToPara(pElem) {
+  const runs = pElem.getElementsByTagNameNS(W_NS, 'r');
+  if (runs.length > 0) {
+    const ts = runs[0].getElementsByTagNameNS(W_NS, 't');
+    if (ts.length > 0) { ts[0].textContent = '【题干】' + (ts[0].textContent || ''); ts[0].setAttribute('xml:space', 'preserve'); return true; }
+  }
+  return false;
+}
+
+function isInTable(pElem) {
+  let node = pElem.parentNode;
+  while (node) {
+    if (node.localName === 'tbl') return true;
+    node = node.parentNode;
+  }
+  return false;
 }
 
 function processDocxXml(xmlStr) {
-  const doc = new DOMParser().parseFromString(xmlStr, 'application/xml');
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlStr, 'application/xml');
   const body = doc.getElementsByTagNameNS(W_NS, 'body')[0];
-  const pArr = Array.from(body.getElementsByTagNameNS(W_NS, 'p'));
-  const n = pArr.length, tagged = new Set(); let replaced = 0; const logs = [];
+  const paragraphs = body.getElementsByTagNameNS(W_NS, 'p');
+  const pArr = Array.from(paragraphs);
+  const n = pArr.length;
+  const tagged = new Set();
+  let replaced = 0;
+  const logs = [];
+  const skipTable = document.getElementById('skipTableCheck').checked;
+
   const texts = pArr.map(p => getParaText(p).trim());
+  const isOpt = t => /^[A-Da-d][．.、\s]/.test(t);
   const isQNum = t => /^\d+[．.、]/.test(t);
   const getPrefix = t => { const m = t.match(/^(\d+[．.、])/); return m ? m[1] : null; };
-  const isOpt = t => /^[A-Da-d][．.、\s]/.test(t);
+
+  function isMaterialGroup(ansIdx) {
+    const m = texts[ansIdx].match(/【答案】(.+)/);
+    if (!m) return false;
+    return (m[1].match(/\d+[．.、](?!\d)/g) || []).length >= 2;
+  }
 
   for (let i = 0; i < n; i++) {
-    const t = texts[i]; if (!/【答案】|【难度】|【来源】|【知识点】/.test(t)) continue;
+    const t = texts[i];
+    if (!/【答案】|【难度】|【来源】|【知识点】/.test(t)) continue;
+    const isMat = /【答案】/.test(t) ? isMaterialGroup(i) : false;
     for (let j = i - 1; j >= 0; j--) {
-      const tj = texts[j]; if (!tj) continue;
+      const tj = texts[j];
+      if (!tj) continue;
       if (tj.startsWith('【题干】')) { tagged.add(j); break; }
-      if (isQNum(tj)) { const prefix = getPrefix(tj); if (prefix && replacePrefixInPara(pArr[j], prefix.length)) { tagged.add(j); replaced++; logs.push({ type: 'ok', msg: '段落' + j + ': "' + tj.substring(0, 30) + '..." → 【题干】' }); } break; }
+      if (isQNum(tj)) {
+        if (isMat) continue;
+        if (skipTable && isInTable(pArr[j])) break;
+        if (!tagged.has(j)) {
+          const prefix = getPrefix(tj);
+          if (prefix && replacePrefixInPara(pArr[j], prefix.length)) { tagged.add(j); replaced++; logs.push({ type: 'ok', msg: '段落' + j + ': "' + tj.substring(0, 30) + '..." → 【题干】' }); }
+        }
+        break;
+      }
       if (/^[一二三四五六七八九十]+、/.test(tj)) break;
       if (isOpt(tj)) continue;
       if (/^【(分析|点睛|导语|原文)】/.test(tj)) continue;
       break;
     }
   }
+
   for (let i = 0; i < n; i++) {
-    const t = texts[i]; if (!isQNum(t) || tagged.has(i)) continue;
+    const t = texts[i];
+    if (!isQNum(t) || tagged.has(i)) continue;
+    if (skipTable && isInTable(pArr[i])) continue;
     for (let j = i + 1; j < Math.min(i + 10, n); j++) {
       const tj = texts[j];
-      if (/【答案】|【难度】|【详解】|【解析】/.test(tj)) { const prefix = getPrefix(t); if (prefix && replacePrefixInPara(pArr[i], prefix.length)) { tagged.add(i); replaced++; logs.push({ type: 'ok', msg: '段落' + i + ': "' + t.substring(0, 30) + '..." → 【题干】' }); } break; }
+      if (/【答案】/.test(tj)) {
+        if (!isMaterialGroup(j)) {
+          const prefix = getPrefix(t);
+          if (prefix && replacePrefixInPara(pArr[i], prefix.length)) { tagged.add(i); replaced++; logs.push({ type: 'ok', msg: '段落' + i + ': "' + t.substring(0, 30) + '..." → 【题干】(前向)' }); }
+        }
+        break;
+      }
+      if (/【难度】|【详解】|【解析】/.test(tj)) {
+        const prefix = getPrefix(t);
+        if (prefix && replacePrefixInPara(pArr[i], prefix.length)) { tagged.add(i); replaced++; logs.push({ type: 'ok', msg: '段落' + i + ': "' + t.substring(0, 30) + '..." → 【题干】(前向)' }); }
+        break;
+      }
       if (isQNum(tj)) break;
     }
   }
 
-  const outXml = new XMLSerializer().serializeToString(doc);
-  return { xml: outXml, replaced, qtagCount: (outXml.match(/【题干】/g) || []).length, logs };
+  for (let i = 0; i < n; i++) {
+    const t = texts[i];
+    if (!/【答案】|【详解】/.test(t)) continue;
+    const isMat = /【答案】/.test(t) ? isMaterialGroup(i) : false;
+    let groupHasTag = false, materialIdx = null;
+    for (let j = i - 1; j >= 0; j--) {
+      const tj = texts[j];
+      if (!tj) continue;
+      if (tagged.has(j)) { groupHasTag = true; break; }
+      if (tj.startsWith('【题干】')) { groupHasTag = true; break; }
+      if (isQNum(tj)) {
+        if (isMat) continue;
+        if (skipTable && isInTable(pArr[j])) { groupHasTag = true; break; }
+        if (!tagged.has(j)) {
+          const prefix = getPrefix(tj);
+          if (prefix && replacePrefixInPara(pArr[j], prefix.length)) { tagged.add(j); replaced++; logs.push({ type: 'ok', msg: '段落' + j + ': "' + tj.substring(0, 30) + '..." → 【题干】(Pass3)' }); }
+        }
+        groupHasTag = true; break;
+      }
+      if (/^[一二三四五六七八九十]+、/.test(tj)) break;
+      if (isOpt(tj)) continue;
+      if (/^\d+[．.、]/.test(tj)) {
+        let isAnalysisCont = false;
+        for (let pk = j - 1; pk >= 0; pk--) {
+          const tpk = texts[pk]; if (!tpk) continue;
+          if (/^\d+[．.、]/.test(tpk)) isAnalysisCont = true;
+          else if (/^【(分析|点睛)】.*\d+[．.、]/.test(tpk)) isAnalysisCont = true;
+          break;
+        }
+        if (isAnalysisCont) continue;
+      }
+      if (/^【(分析|点睛|导语|原文)】/.test(tj)) break;
+      if (/^【(答案|详解|解析|难度|来源|知识点)】/.test(tj)) break;
+      if (/^【.+】$/.test(tj)) continue;
+      if (/^[\(（]\d+[\)）]/.test(tj)) continue;
+      if (/^[①②④⑤⑥⑦⑧⑨⑩]/.test(tj)) continue;
+      if (/(完成小?题|回答下列问题|请根据|阅读.*回答)/.test(tj)) { if (materialIdx === null) materialIdx = j; continue; }
+      if (materialIdx === null) materialIdx = j;
+    }
+    if (!groupHasTag && materialIdx !== null && !tagged.has(materialIdx)) {
+      if (!(skipTable && isInTable(pArr[materialIdx]))) {
+        if (addTagToPara(pArr[materialIdx])) { tagged.add(materialIdx); replaced++; logs.push({ type: 'warn', msg: '段落' + materialIdx + ': 材料题添加【题干】' }); }
+      }
+    }
+  }
+
+  const curTexts = pArr.map(p => getParaText(p).trim());
+  for (const j of [...tagged]) {
+    const t = curTexts[j];
+    if (!t.startsWith('【题干】')) continue;
+    let hasAnalysisAbove = false, hasDetailBelow = false;
+    for (let k = j - 1; k >= 0; k--) { const tk = curTexts[k]; if (!tk) continue; if (/^【(分析|点睛)】/.test(tk)) hasAnalysisAbove = true; break; }
+    for (let k = j + 1; k < n; k++) { const tk = curTexts[k]; if (!tk) continue; if (/^【(详解|答案|知识点|难度|来源)】/.test(tk)) hasDetailBelow = true; break; }
+    if (hasAnalysisAbove && hasDetailBelow) {
+      for (const r of pArr[j].getElementsByTagNameNS(W_NS, 'r')) {
+        const ts = r.getElementsByTagNameNS(W_NS, 't');
+        for (const tt of ts) { if (tt.textContent.startsWith('【题干】')) { tt.textContent = tt.textContent.substring(4); break; } }
+      }
+      tagged.delete(j); replaced--;
+      logs.push({ type: 'warn', msg: '段落' + j + ': 移除【分析】内容中误加的【题干】' });
+    }
+  }
+
+  const serializer = new XMLSerializer();
+  const outXml = serializer.serializeToString(doc);
+  const qtagCount = (outXml.match(/【题干】/g) || []).length;
+  return { xml: outXml, replaced, qtagCount, logs };
 }
 
 async function processDocxFile(file) {
@@ -344,36 +733,51 @@ async function processDocxFile(file) {
 }
 
 async function processFiles() {
-  const btn = document.getElementById('processBtn'); btn.disabled = true; btn.textContent = '⏳ 处理中...';
-  const bar = document.getElementById('progressBar'); bar.classList.remove('hidden');
-  const el = document.getElementById('results'); el.classList.remove('hidden'); el.innerHTML = '';
+  const btn = document.getElementById('processBtn');
+  btn.disabled = true; btn.textContent = '⏳ 处理中...';
+  const bar = document.getElementById('progressBar');
+  const fill = document.getElementById('progressFill');
+  bar.classList.remove('hidden');
+  const el = document.getElementById('results');
+  el.classList.remove('hidden');
+  el.innerHTML = '';
+
   const allResults = [];
   for (let i = 0; i < loadedFiles.length; i++) {
-    document.getElementById('progressFill').style.width = ((i / loadedFiles.length) * 100) + '%';
+    fill.style.width = ((i / loadedFiles.length) * 100) + '%';
     try {
       const result = await processDocxFile(loadedFiles[i]);
       allResults.push({ name: loadedFiles[i].name, ...result, error: null });
-      saveAs(result.blob, loadedFiles[i].name.replace('.docx', '_修改后.docx'));
+      const outName = loadedFiles[i].name.replace('.docx', '_修改后.docx');
+      saveAs(result.blob, outName);
     } catch (err) { allResults.push({ name: loadedFiles[i].name, error: err.message }); }
   }
-  document.getElementById('progressFill').style.width = '100%';
+  fill.style.width = '100%';
   renderResults(allResults);
   btn.disabled = false; btn.textContent = '🚀 开始处理';
 }
 
 function renderResults(results) {
-  const el = document.getElementById('results'); let html = '';
+  const el = document.getElementById('results');
+  let html = '';
+  const totalOk = results.filter(r => !r.error).length;
+  const totalErr = results.filter(r => r.error).length;
+
+  html += '<div class="summary-cards">' +
+    '<div class="summary-card total"><div class="num">' + results.length + '</div><div class="label">处理文件数</div></div>' +
+    '<div class="summary-card ok"><div class="num">' + totalOk + '</div><div class="label">处理成功</div></div>' +
+    '<div class="summary-card' + (totalErr > 0 ? ' fail' : ' total') + '"><div class="num">' + totalErr + '</div><div class="label">处理错误</div></div></div>';
+
   results.forEach((r, ri) => {
     const outName = r.name.replace('.docx', '_修改后.docx');
-    html += '<div style="padding:12px 16px;background:' + (r.error ? '#fff1f0' : '#f6ffed') + ';border-radius:8px;margin-bottom:12px;font-size:13px">';
-    html += (r.error ? '❌' : '✅') + ' ' + r.name;
-    if (!r.error) html += ' — 替换 ' + r.replaced + ' 处 | 【题干】=' + r.qtagCount + ' | <a href="#" onclick="redownload(' + ri + ');return false;" style="color:#11998e;margin-left:8px">⬇ 重新下载</a>';
-    else html += ' — 错误: ' + r.error;
-    html += '</div>';
+    html += '<div class="file-info"><div class="icon">' + (r.error ? '❌' : '✅') + '</div><div class="details"><div class="name">' + r.name + '</div><div class="meta">';
+    if (r.error) { html += '错误: ' + r.error; }
+    else { html += '替换 ' + r.replaced + ' 处 | 【题干】=' + r.qtagCount; html += ' | <a class="download-btn" href="#" onclick="redownload(' + ri + ');return false;">⬇ 重新下载 ' + outName + '</a>'; }
+    html += '</div></div></div>';
     if (r.logs && r.logs.length) {
-      html += '<div class="log-box">';
-      r.logs.forEach(l => { html += '<div class="' + (l.type === 'ok' ? 'log-ok' : 'log-warn') + '">' + l.msg + '</div>'; });
-      html += '</div>';
+      html += '<div class="result-section"><div class="result-header"><h3>处理日志 - ' + r.name + '</h3></div><div class="log-box">';
+      r.logs.forEach(l => { const cls = l.type === 'ok' ? 'log-ok' : (l.type === 'warn' ? 'log-warn' : 'log-err'); html += '<div class="' + cls + '">' + l.msg + '</div>'; });
+      html += '</div></div>';
     }
   });
   el.innerHTML = html;
@@ -381,6 +785,200 @@ function renderResults(results) {
 }
 
 function redownload(idx) { const item = window._resultBlobs[idx]; if (item) saveAs(item.blob, item.name); }
+
+// ===================================================================
+// 🔍 配题查询功能
+// ===================================================================
+const KC_ALL_CATS = [
+  { course: 1, videoCourse: 1, hierarchical: 1, label: '巩固练习', type: 'practice' },
+  { course: 0, videoCourse: 2, hierarchical: null, label: '当堂小测', type: 'quiz' },
+  { course: 2, videoCourse: 3, hierarchical: 1, label: '作业A', type: 'homework' },
+  { course: 2, videoCourse: 3, hierarchical: 2, label: '作业B', type: 'homework' },
+  { course: 2, videoCourse: 3, hierarchical: 3, label: '作业C', type: 'homework' },
+  { course: 2, videoCourse: 3, hierarchical: 4, label: '作业D', type: 'homework' },
+];
+
+let kcLoadedFiles = [];
+const kcTodayStr = new Date().toISOString().split('T')[0];
+document.getElementById('kcFilterDate').value = kcTodayStr;
+document.getElementById('kcStartDate').value = kcTodayStr;
+document.getElementById('kcEndDate').value = kcTodayStr;
+
+function kcToggleDateInputs() {
+  const mode = document.getElementById('kcDateMode').value;
+  document.getElementById('kcRangeRow').classList.toggle('hidden', mode !== 'range');
+  document.getElementById('kcSingleRow').classList.toggle('hidden', mode !== 'single');
+}
+
+const kcUploadArea = document.getElementById('kcUploadArea');
+const kcFileInput = document.getElementById('kcFileInput');
+kcUploadArea.addEventListener('click', () => kcFileInput.click());
+kcUploadArea.addEventListener('dragover', e => { e.preventDefault(); kcUploadArea.classList.add('dragover'); });
+kcUploadArea.addEventListener('dragleave', () => kcUploadArea.classList.remove('dragover'));
+kcUploadArea.addEventListener('drop', e => { e.preventDefault(); kcUploadArea.classList.remove('dragover'); kcHandleFiles(e.dataTransfer.files); });
+kcFileInput.addEventListener('change', e => kcHandleFiles(e.target.files));
+
+function kcHandleFiles(files) {
+  for (const f of files) { if (/\.(xlsx|xls)$/i.test(f.name)) kcLoadedFiles.push(f); }
+  kcRenderFileList();
+  document.getElementById('kcAnalyzeBtn').disabled = kcLoadedFiles.length === 0;
+}
+
+function kcRenderFileList() {
+  const el = document.getElementById('kcFileList');
+  if (!kcLoadedFiles.length) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  el.innerHTML = kcLoadedFiles.map((f, i) =>
+    '<span class="kc-file-chip active" onclick="kcRemoveFile(' + i + ')">' + f.name + ' <span class="remove">✕</span></span>'
+  ).join('');
+}
+
+function kcRemoveFile(idx) {
+  kcLoadedFiles.splice(idx, 1);
+  kcRenderFileList();
+  document.getElementById('kcAnalyzeBtn').disabled = kcLoadedFiles.length === 0;
+}
+
+function kcReset() {
+  kcLoadedFiles = [];
+  kcFileInput.value = '';
+  kcRenderFileList();
+  document.getElementById('kcAnalyzeBtn').disabled = true;
+  document.getElementById('kcResults').classList.add('hidden');
+  document.getElementById('kcResults').innerHTML = '';
+}
+
+function kcReadFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        resolve(XLSX.utils.sheet_to_json(ws));
+      } catch (err) { reject(err); }
+    };
+    reader.onerror = () => reject(new Error('读取失败'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function kcToDateStr(d) {
+  if (!d) return null;
+  if (d instanceof Date) return d.toISOString().split('T')[0];
+  const m = String(d).match(/(\d{4})[-\/](\d{2})[-\/](\d{2})/);
+  return m ? m[0] : null;
+}
+
+function kcAnalyzeData(rows, fileName) {
+  const dateMode = document.getElementById('kcDateMode').value;
+  const startDate = document.getElementById('kcStartDate').value;
+  const endDate = document.getElementById('kcEndDate').value;
+  const customDate = document.getElementById('kcFilterDate').value;
+  const dateCol = Object.keys(rows[0] || {}).find(k => /create|date|时间/i.test(k));
+  let filtered = rows;
+  let dateLabel = '全部';
+  if (dateMode === 'today') {
+    filtered = rows.filter(r => kcToDateStr(r[dateCol]) === kcTodayStr);
+    dateLabel = kcTodayStr;
+  } else if (dateMode === 'range') {
+    filtered = rows.filter(r => { const d = kcToDateStr(r[dateCol]); return d && d >= startDate && d <= endDate; });
+    dateLabel = startDate + ' ~ ' + endDate;
+  } else if (dateMode === 'single') {
+    filtered = rows.filter(r => kcToDateStr(r[dateCol]) === customDate);
+    dateLabel = customDate;
+  }
+
+  const kpIds = [...new Set(filtered.map(r => r.knowledge_point_id))].sort((a, b) => a - b);
+  const results = [];
+  for (const kpid of kpIds) {
+    const sub = filtered.filter(r => r.knowledge_point_id === kpid);
+    const cats = KC_ALL_CATS.map(cat => {
+      const matching = sub.filter(r => {
+        if (Number(r.course_type) !== cat.course) return false;
+        if (Number(r.video_course_type) !== cat.videoCourse) return false;
+        if (cat.hierarchical !== null && Number(r.hierarchical_type) !== cat.hierarchical) return false;
+        return true;
+      });
+      return { ...cat, count: matching.length, qids: matching.map(r => r.question_id) };
+    });
+    const missing = cats.filter(c => c.count === 0);
+    results.push({ kpid, total: sub.length, cats, missing, complete: missing.length === 0 });
+  }
+  return { fileName, totalRows: rows.length, filteredRows: filtered.length, kpCount: kpIds.length, results, totalMissing: results.filter(r => !r.complete).length, dateLabel };
+}
+
+async function kcAnalyze() {
+  const btn = document.getElementById('kcAnalyzeBtn');
+  btn.disabled = true; btn.textContent = '⏳ 分析中...';
+  const el = document.getElementById('kcResults');
+  el.classList.remove('hidden');
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">正在读取文件...</div>';
+  try {
+    const allRes = [];
+    for (const file of kcLoadedFiles) { allRes.push(kcAnalyzeData(await kcReadFile(file), file.name)); }
+    kcRenderResults(allRes);
+  } catch (err) { el.innerHTML = '<div style="text-align:center;padding:40px;color:#ff4d4f;">❌ 错误: ' + err.message + '</div>'; }
+  btn.disabled = false; btn.textContent = '🔍 开始分析';
+}
+
+function kcRenderResults(allResults) {
+  const el = document.getElementById('kcResults');
+  let html = '';
+  allResults.forEach((res, ri) => {
+    const okC = res.results.filter(r => r.complete).length;
+    const failC = res.totalMissing;
+    const uid = 'kcr' + ri;
+    html += '<div class="kc-summary-cards">' +
+      '<div class="kc-summary-card total"><div class="num">' + res.kpCount + '</div><div class="label">知识点总数</div></div>' +
+      '<div class="kc-summary-card ok"><div class="num">' + okC + '</div><div class="label">分类完整</div></div>' +
+      '<div class="kc-summary-card fail"><div class="num">' + failC + '</div><div class="label">缺少分类</div></div>' +
+      '<div class="kc-summary-card total"><div class="num">' + res.filteredRows + '</div><div class="label">筛选后题目数 (' + res.dateLabel + ')</div></div></div>';
+    html += '<div class="kc-file-info"><div class="icon">📄</div><div class="details"><div class="name">' + res.fileName + '</div><div class="meta">原始 ' + res.totalRows + ' 条 → 筛选后 ' + res.filteredRows + ' 条 | 日期: ' + res.dateLabel + '</div></div></div>';
+    html += '<div class="kc-result-section"><div class="kc-tab-bar">' +
+      '<button class="active" onclick="kcSwitchTab(this,\'' + uid + '-m\')">❌ 缺少分类 <span class="badge red">' + failC + '</span></button>' +
+      '<button onclick="kcSwitchTab(this,\'' + uid + '-c\')">✅ 分类完整 <span class="badge green">' + okC + '</span></button></div>';
+    // Missing panel
+    html += '<div id="' + uid + '-m" class="kc-tab-panel">';
+    if (!failC) { html += '<div class="kc-empty"><p>🎉 所有知识点分类完整！</p></div>'; }
+    else {
+      html += '<table class="kc-table"><thead><tr><th>knowledge_point_id</th><th>总题数</th>';
+      KC_ALL_CATS.forEach(c => { html += '<th>' + c.label + '</th>'; });
+      html += '<th>缺少</th></tr></thead><tbody>';
+      res.results.filter(r => !r.complete).forEach(r => {
+        html += '<tr><td><strong>' + r.kpid + '</strong></td><td>' + r.total + '</td>';
+        r.cats.forEach(c => { html += '<td class="' + (c.count === 0 ? 'kc-cell-fail kc-status-fail' : 'kc-cell-ok kc-status-ok') + '">' + (c.count === 0 ? '✗ 缺失' : c.count + '题 ✓') + '</td>'; });
+        html += '<td class="kc-status-fail">' + r.missing.map(m => m.label).join('、') + '</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+    // Complete panel
+    html += '<div id="' + uid + '-c" class="kc-tab-panel hidden">';
+    if (!okC) { html += '<div class="kc-empty"><p>暂无完整的知识点</p></div>'; }
+    else {
+      html += '<table class="kc-table"><thead><tr><th>knowledge_point_id</th><th>总题数</th>';
+      KC_ALL_CATS.forEach(c => { html += '<th>' + c.label + '</th>'; });
+      html += '</tr></thead><tbody>';
+      res.results.filter(r => r.complete).forEach(r => {
+        html += '<tr><td><strong>' + r.kpid + '</strong></td><td>' + r.total + '</td>';
+        r.cats.forEach(c => { html += '<td class="kc-cell-ok kc-status-ok">' + c.count + '题 ✓</td>'; });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+    }
+    html += '</div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function kcSwitchTab(btn, panelId) {
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const section = btn.closest('.kc-result-section');
+  section.querySelectorAll('.kc-tab-panel').forEach(d => d.classList.add('hidden'));
+  document.getElementById(panelId).classList.remove('hidden');
+}
 </script>
 </body>
 </html>
